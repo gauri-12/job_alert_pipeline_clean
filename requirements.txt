@@ -1,0 +1,9 @@
+python-dotenv
+groq
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+gspread
+beautifulsoup4
+requests
