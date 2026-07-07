@@ -229,7 +229,6 @@ The Gmail OAuth token expires periodically. When it does, the pipeline will fail
 - `credentials.json` — your Google OAuth client secret
 - `token.json` — your OAuth access token
 - `.env` — your API keys and config
-- `resume.txt` — your resume content
 
 ---
 
