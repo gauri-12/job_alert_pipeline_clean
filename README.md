@@ -38,7 +38,7 @@ GitHub Actions runs this every night at midnight UTC via `daily_pipeline.yml`.
 
 ## Prerequisites
 
-Before you start, you'll need accounts on these free services:
+Before you start, you'll need Python 3.10 or newer and accounts on these free services:
 
 - **Google account** (Gmail) with LinkedIn job alert emails set up
 - **Google Cloud** account (free) — for the Gmail and Sheets APIs
@@ -52,8 +52,8 @@ Before you start, you'll need accounts on these free services:
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/job-alert-pipeline.git
-cd job-alert-pipeline
+git clone https://github.com/gauri-12/job_alert_pipeline_clean.git
+cd job_alert_pipeline_clean
 ```
 
 ### 2. Install dependencies
@@ -80,6 +80,7 @@ This is the most involved step — it only needs to be done once.
 1. Go to "APIs & Services" → "Credentials"
 2. Click "Create Credentials" → "OAuth client ID"
 3. If prompted to configure the consent screen: choose "External", fill in an app name, add your Gmail address as a test user, and save
+   - Afterwards, open the OAuth consent screen and set the publishing status to **In production**. Google expires refresh tokens after about 7 days for apps left in "Testing", which would break the nightly run every week. For a personal app you do not need to submit it for verification.
 4. Application type: **Desktop app**
 5. Click Create — download the JSON file
 6. Save it as `credentials.json` in the project root (it's gitignored)
@@ -125,7 +126,7 @@ MIN_FIT_SCORE=6
 
 ### 7. Customise `config.py`
 
-Open `config.py` — this is the **only file you need to edit** to personalise the pipeline. Fill in:
+Open `config.py` — this is the **only file you need to edit** to personalise the pipeline. GitHub Actions reads `config.py` from the repo, so your personal profile and salary target end up in whatever repo you push. If you use this template, keep your filled-in copy in a **private** repo. Fill in:
 - `SYSTEM_ROLE` — tailor the LLM persona to your field
 - `YOUR_PROFILE` — your target roles, compensation target, location, and top strengths
 - `EVALUATION_INSTRUCTIONS` — the scoring criteria for your roles
@@ -137,7 +138,7 @@ Open `config.py` — this is the **only file you need to edit** to personalise t
 
 ### 8. Add your resume
 
-Fill in the file called `resume.txt` in the project root and paste your resume content in plain text. This file is gitignored and will never be committed.
+Copy `resume.example.txt` to `resume.txt` and replace its contents with your resume in plain text. `resume.txt` is gitignored, so it is never committed. For GitHub Actions, the same text goes into the `RESUME_TEXT` secret (see below).
 
 ---
 
@@ -147,7 +148,7 @@ Fill in the file called `resume.txt` in the project root and paste your resume c
 # Full run
 python main.py
 
-# Dry run — reads emails and pre-screens jobs, but skips Groq and Sheets
+# Dry run — reads emails and pre-screens jobs, but skips Groq and Sheets. Emails stay unread and no Groq key is needed
 python main.py --dry-run
 
 # Test mode — runs one sample evaluation to verify Groq is connected
@@ -168,6 +169,7 @@ Go to your repo → **Settings** → **Secrets and variables** → **Actions** �
 |---|---|
 | `GOOGLE_CREDENTIALS` | Paste the full contents of `credentials.json` |
 | `GOOGLE_TOKEN` | Paste the full contents of `token.json` |
+| `RESUME_TEXT` | Paste the full plain text of your resume (the same text as your local `resume.txt`) |
 | `GROQ_API_KEY` | Your Groq API key |
 | `GMAIL_USER` | Your Gmail address |
 | `GOOGLE_SHEET_ID` | Your Google Sheet ID |
@@ -214,7 +216,7 @@ The Gmail OAuth token expires periodically. When it does, the pipeline will fail
 ├── evaluator.py          # LLM job evaluation via Groq
 ├── sheets_logger.py      # Logs results to Google Sheets
 ├── digest_sender.py      # Sends HTML email digest
-├── resume.txt            # Fill in with your resume file
+├── resume.example.txt    # Template. Copy to resume.txt (gitignored) and fill in
 ├── requirements.txt      # Python dependencies
 │
 ├── .github/
@@ -232,13 +234,19 @@ The Gmail OAuth token expires periodically. When it does, the pipeline will fail
 
 ---
 
+## Responsible use
+
+LinkedIn's User Agreement prohibits automated scraping, and a federal court enforced that against hiQ Labs in 2022. This tool only fetches the postings listed in your own alert emails, one at a time with delays, for personal use. You use it at your own risk, and LinkedIn may block the requests, especially from GitHub Actions servers.
+
+---
+
 ## Troubleshooting
 
 **`invalid_grant: Token has been expired or revoked`**
 Your Gmail OAuth token has expired. Re-run the local auth step and update the `GOOGLE_TOKEN` GitHub secret. See the "Keeping your token fresh" section above.
 
 **`resume.txt not found`**
-Create the file in the project root and paste your resume in plain text: `touch resume.txt`
+Copy the template and paste your resume into it: `cp resume.example.txt resume.txt`
 
 **No emails found**
 Make sure you have LinkedIn job alert emails set up. In LinkedIn, go to Jobs → Job Alerts and create alerts for your target roles. The pipeline looks for emails from `jobalerts-noreply@linkedin.com` that arrived in the last 24 hours and are unread.
