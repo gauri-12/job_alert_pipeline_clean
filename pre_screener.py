@@ -24,7 +24,7 @@ def get_archetype_fit(title: str) -> str:
     """
     title_lower = title.lower()
     for fit_level, archetypes in ROLE_ARCHETYPES.items():
-        if any(archetype in title_lower for archetype in archetypes):
+        if any(archetype.lower() in title_lower for archetype in archetypes):
             return fit_level
     return "unknown"
 
@@ -52,7 +52,7 @@ def screen_job(title: str, description: str = "") -> dict:
 
     # 1. Check negative keywords first — instant fail
     for neg in NEGATIVE_KEYWORDS:
-        if neg.strip() in title_lower:
+        if neg.strip().lower() in title_lower:
             return {
                 "pass": False,
                 "reason": f"Negative keyword match in title: '{neg.strip()}'",
@@ -65,7 +65,7 @@ def screen_job(title: str, description: str = "") -> dict:
     # 2. Check positive keywords — need at least one match
     matched_positive = None
     for pos in POSITIVE_KEYWORDS:
-        if pos in text_lower:
+        if pos.lower() in text_lower:
             matched_positive = pos
             break
 
@@ -83,7 +83,7 @@ def screen_job(title: str, description: str = "") -> dict:
     archetype_fit = get_archetype_fit(title)
 
     # 4. Check seniority
-    has_seniority = any(s in title_lower for s in SENIORITY_BOOST)
+    has_seniority = any(s.lower() in title_lower for s in SENIORITY_BOOST)
 
     return {
         "pass": True,
