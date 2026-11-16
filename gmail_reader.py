@@ -49,8 +49,8 @@ def get_linkedin_alert_emails(service, max_results=20):
     return results.get('messages', [])
 
 
-def parse_jobs_from_email(service, message_id):
-    """Extract job URLs from a LinkedIn alert email and mark it as read."""
+def parse_jobs_from_email(service, message_id, mark_read=True):
+    """Extract job URLs from a LinkedIn alert email. Marks it as read unless mark_read is False."""
     msg = service.users().messages().get(
         userId='me', id=message_id, format='full'
     ).execute()
@@ -93,11 +93,12 @@ def parse_jobs_from_email(service, message_id):
                     'title_hint': ''
                 })
 
-    # Mark email as read
-    service.users().messages().modify(
-        userId='me', id=message_id,
-        body={'removeLabelIds': ['UNREAD']}
-    ).execute()
+    # Mark email as read (skipped on a dry run so the real run still finds it)
+    if mark_read:
+        service.users().messages().modify(
+            userId='me', id=message_id,
+            body={'removeLabelIds': ['UNREAD']}
+        ).execute()
 
     return jobs
 
