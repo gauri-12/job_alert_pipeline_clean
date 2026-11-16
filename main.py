@@ -5,7 +5,7 @@ main.py — Daily LinkedIn Job Alert Evaluation Pipeline.
 
 Usage:
   python main.py              # full run
-  python main.py --dry-run    # parse emails + pre-screen only, no API calls
+  python main.py --dry-run    # parse emails + pre-screen only, no Groq/Sheets calls, emails stay unread
   python main.py --test       # run one test evaluation to verify Groq is working
 """
 
@@ -57,7 +57,7 @@ def run_pipeline():
     # Extract all job URLs from all emails
     all_stubs = []
     for email in emails:
-        stubs = parse_jobs_from_email(service, email['id'])
+        stubs = parse_jobs_from_email(service, email['id'], mark_read=not DRY_RUN)
         all_stubs.extend(stubs)
 
     # Deduplicate
@@ -118,7 +118,7 @@ def run_pipeline():
         title   = job.get('title', '?')
         company = job.get('company', '?')
         screen  = job.get('screen', {})
-        print(f'   [{i+1}/{len(full_jobs)}] {title} @ {company}')
+        print(f'   [{i+1}/{len(passed)}] {title} @ {company}')
 
         try:
             ev    = evaluate_job(job,
