@@ -22,7 +22,7 @@ from config import SYSTEM_ROLE,YOUR_PROFILE, EVALUATION_INSTRUCTIONS, CALIBRATIO
 
 load_dotenv()
  
-client = Groq(api_key=os.getenv('GROQ_API_KEY'))
+client = None   # created on first use, so `python main.py --dry-run` works without a Groq key
 MODEL  = os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile')
 DELAY  = float(os.getenv('GROQ_CALL_DELAY', '35'))
  
@@ -31,10 +31,25 @@ _last_call = 0.0   # module-level timestamp for rate limiting
  
 # ── Resume loader ─────────────────────────────────────────────────────────────
  
+def _get_client():
+    global client
+    if client is None:
+        client = Groq(api_key=os.getenv('GROQ_API_KEY'))
+    return client
+
+
+def _to_score(value):
+    """Turn 8, '8' or '8/10' into a number. Anything unreadable becomes 0."""
+    if isinstance(value, (int, float)):
+        return value
+    match = re.search(r'\d+(?:\.\d+)?', str(value or ''))
+    return float(match.group()) if match else 0
+
+
 def load_resume() -> str:
     path = 'resume.txt'
     if not os.path.exists(path):
-        raise FileNotFoundError("'resume.txt' not found. Add your resume as resume.txt in the project root.")
+        raise FileNotFoundError("'resume.txt' not found. Copy resume.example.txt to resume.txt and paste your resume into it.")
     with open(path) as f:
         return f.read()
  
@@ -128,7 +143,7 @@ def evaluate_job(job: dict,  archetype_fit: str = None) -> dict:
     if elapsed < DELAY:
         time.sleep(DELAY - elapsed)
  
-    response = client.chat.completions.create(
+    response = _get_client().chat.completions.create(
         model=MODEL,
         messages=[
             {'role': 'system', 'content': SYSTEM_ROLE},
@@ -151,8 +166,11 @@ def evaluate_job(job: dict,  archetype_fit: str = None) -> dict:
         except Exception:
             result = {'error': 'parse failed', 'raw': raw[:300]}
  
+    # Make sure the score is a number (models sometimes return "8" or "8/10")
+    result['fit_score'] = _to_score(result.get('fit_score'))
+
     # Normalise fit_tier — Groq sometimes goes off-script
-    tier = result.get('fit_tier', '')
+    tier = result.get('fit_tier') or ''
     tier_lower = tier.lower()
     if any(w in tier_lower for w in ['strong', 'excellent', 'great', 'perfect']):
         result['fit_tier'] = 'Strong Fit'
@@ -164,7 +182,7 @@ def evaluate_job(job: dict,  archetype_fit: str = None) -> dict:
         result['fit_tier'] = 'Poor Fit'
  
     # Normalise application_priority
-    pri = result.get('application_priority', '')
+    pri = result.get('application_priority') or ''
     pri_lower = pri.lower()
     if 'today' in pri_lower:
         result['application_priority'] = 'Apply today'
