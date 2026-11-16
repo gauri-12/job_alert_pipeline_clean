@@ -22,7 +22,7 @@ load_dotenv()
 
 SHEET_ID = os.getenv('GOOGLE_SHEET_ID', '')
 
-# Column headers — paste these into Row 1 of your Google Sheet manually
+# Column headers — added to Row 1 automatically on the first run if the sheet is empty
 HEADERS = [
     'Date', 'Job Title', 'Company', 'Location',
     'Fit Score', 'Fit Tier', 'Fit Summary',
