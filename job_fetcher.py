@@ -11,8 +11,11 @@ LinkedIn serves job postings to unauthenticated visitors through a public guest 
 This is the same data LinkedIn serves to search engines and anonymous browsers.
 It works without a session cookie or login, and has been confirmed working in 2026.
 
-Legal note: Scraping publicly accessible data is permissible per the hiQ v. LinkedIn
-ruling (9th Circuit) affirming that accessing public data does not violate the CFAA.
+Responsible use: LinkedIn's User Agreement prohibits automated scraping, and in 2022 a
+federal court enforced that against hiQ (breach of contract), even though the earlier 9th
+Circuit ruling found public pages were not covered by the CFAA. This tool only fetches
+postings that appear in your own alert emails, at low volume, for personal use. Use it at
+your own risk. LinkedIn may block it or change the endpoint at any time.
 """
 # ─────────────────────────────────────────────────────────────────
 
