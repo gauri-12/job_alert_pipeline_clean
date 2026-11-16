@@ -90,7 +90,7 @@ SENIORITY_BOOST = ["senior", "staff", "lead", "consultant", "specialist",# add m
 # primary = dream role, secondary = good fit, adjacent = stretch/ alternate role names
 ROLE_ARCHETYPES = {
     "primary": ["senior data analyst", "grc analyst",], # add more roles here
-    "secondary": ["bi engineer", "bi analayst",], # add more roles here
+    "secondary": ["bi engineer", "bi analyst",], # add more roles here
     "adjacent": ["business analyst", "reporting analyst", ], # add more roles here
 }
 
