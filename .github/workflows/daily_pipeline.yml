@@ -21,20 +21,31 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Write credentials.json
-        run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
-
-      - name: Write token.json
-        run: echo '${{ secrets.GOOGLE_TOKEN }}' > token.json
+      - name: Write credentials, token and resume
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GOOGLE_TOKEN: ${{ secrets.GOOGLE_TOKEN }}
+          RESUME_TEXT: ${{ secrets.RESUME_TEXT }}
+        run: |
+          test -n "$RESUME_TEXT" || { echo "RESUME_TEXT secret is missing"; exit 1; }
+          printf '%s' "$GOOGLE_CREDENTIALS" > credentials.json
+          printf '%s' "$GOOGLE_TOKEN" > token.json
+          printf '%s' "$RESUME_TEXT" > resume.txt
 
       - name: Write .env
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
         run: |
-          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" > .env
-          echo "GMAIL_USER=${{ secrets.GMAIL_USER }}" >> .env
-          echo "GOOGLE_SHEET_ID=${{ secrets.GOOGLE_SHEET_ID }}" >> .env
-          echo "GROQ_MODEL=llama-3.3-70b-versatile" >> .env
-          echo "GROQ_CALL_DELAY=35" >> .env
-          echo "MIN_FIT_SCORE=6" >> .env
+          {
+            echo "GROQ_API_KEY=$GROQ_API_KEY"
+            echo "GMAIL_USER=$GMAIL_USER"
+            echo "GOOGLE_SHEET_ID=$GOOGLE_SHEET_ID"
+            echo "GROQ_MODEL=llama-3.3-70b-versatile"
+            echo "GROQ_CALL_DELAY=35"
+            echo "MIN_FIT_SCORE=6"
+          } > .env
 
       - name: Run pipeline
         run: python3 main.py
